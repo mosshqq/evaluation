@@ -10,7 +10,6 @@
         .container { max-width: 800px; margin: 0 auto; }
         .input-section { margin-bottom: 20px; }
         #voiceBtn { margin: 10px 0; padding: 8px 16px; }
-        #stopVoiceBtn { margin: 10px 0; padding: 8px 16px; display: none; }
         #textInput { width: 100%; height: 100px; margin: 10px 0; }
         #radarChart { margin-top: 20px; }
     </style>
@@ -21,7 +20,6 @@
         
         <div class="input-section">
             <button id="voiceBtn">🎤 Start Voice Input</button>
-            <button id="stopVoiceBtn">Listening</button>
             <input type="file" id="cameraUpload" accept="image/*" capture="environment">
             <textarea id="textInput" placeholder="Enter or speak student's response here..."></textarea>
         </div>
@@ -40,21 +38,11 @@
 
         voiceBtn.addEventListener('click', () => {
             recognition.start();
-            // voiceBtn.textContent = 'Listening...';
-            voiceBtn.style.display = 'none';
-            stopVoiceBtn.style.display = 'block';
-        });
-
-        stopVoiceBtn.addEventListener('click', () => {
-            recognition.stop();
-            // voiceBtn.textContent = 'Listening...';
-            voiceBtn.style.display = 'block';
-            stopVoiceBtn.style.display = 'none';
+            voiceBtn.textContent = 'Listening...';
         });
 
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
-            console.log('transcript', transcript)
             textInput.value = transcript;
             analyzeResponse(transcript);
             voiceBtn.textContent = '🎤 Start Voice Input';
