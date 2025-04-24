@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Response Evaluation</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .input-section { margin-bottom: 20px; }
+        #voiceBtn { margin: 10px 0; padding: 8px 16px; }
+        #stopVoiceBtn { margin: 10px 0; padding: 8px 16px; display: none; }
+        #textInput { width: 100%; height: 100px; margin: 10px 0; }
+        #radarChart { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Student Response Evaluation System</h2>
+        
+        <div class="input-section">
+            <button id="voiceBtn">🎤 Start Voice Input</button>
+            <button id="stopVoiceBtn">Listening</button>
+            <input type="file" id="cameraUpload" accept="image/*" capture="environment">
+            <textarea id="textInput" placeholder="Enter or speak student's response here..."></textarea>
+        </div>
+
+        <canvas id="radarChart"></canvas>
+    </div>
+
+    <script>
+        // 语音识别初始化
+        const voiceBtn = document.getElementById('voiceBtn');
+        const textInput = document.getElementById('textInput');
+        let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+
+        voiceBtn.addEventListener('click', () => {
+            recognition.start();
+            // voiceBtn.textContent = 'Listening...';
+            voiceBtn.style.display = 'none';
+            stopVoiceBtn.style.display = 'block';
+        });
+
+        stopVoiceBtn.addEventListener('click', () => {
+            recognition.stop();
+            // voiceBtn.textContent = 'Listening...';
+            voiceBtn.style.display = 'block';
+            stopVoiceBtn.style.display = 'none';
+        });
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            console.log('transcript', transcript)
+            textInput.value = transcript;
+            analyzeResponse(transcript);
+            voiceBtn.textContent = '🎤 Start Voice Input';
+        };
+
+        // 拍照上传处理
+        document.getElementById('cameraUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            // 这里可以添加图片处理逻辑（如OCR识别）
+            alert('Photo uploaded. Please input text manually.');
+        });
+
+        // 实时分析输入内容
+        textInput.addEventListener('input', (e) => analyzeResponse(e.target.value));
+
+        // 雷达图初始化
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        const radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['To the Point', 'Problem Solving', '-ing Form Usage', 'Clarity & Logic'],
+                datasets: [{
+                    label: 'Evaluation',
+                    data: [0, 0, 0, 0],
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)'
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 10,
+                        ticks: { stepSize: 2 }
+                    }
+                }
+            }
+        });
+
+        // 分析函数（简化版）
+        function analyzeResponse(text) {
+            // 这里可以添加更复杂的分析逻辑
+            const scores = {
+                toThePoint: Math.min(10, text.split(/\.|\?|!/).length * 2), // 基于回答的简洁性
+                problemSolving: text.toLowerCase().includes('solve') ? 8 : 5, // 简单关键词检测
+                ingUsage: (text.match(/\b\w+ing\b/gi) || []).length * 2, // -ing形式计数
+                clarity: Math.min(10, text.split(/ first|second|finally|because|however/i).length * 1.5) // 逻辑连接词检测
+            };
+
+            radarChart.data.datasets[0].data = [
+                scores.toThePoint,
+                scores.problemSolving,
+                scores.ingUsage,
+                scores.clarity
+            ];
+            radarChart.update();
+        }
+    </script>
+</body>
+</html>
